@@ -233,7 +233,6 @@ HRESULT MakeWindow
 //パラメータは適当で
 Sprite sprite;
 Sprite sprite2;
-Sprite sprite3;
 Texture textureColor;
 Texture textureStart;
 Texture textureOver;
@@ -309,10 +308,10 @@ int _stdcall WinMain
 	//Direct3DDeviceの作成を試みる
 	if (d3d.TryCreate(hWnd))
 	{
-		MessageBox(NULL,
+		/*MessageBox(NULL,
 			TEXT("Direct3D Device作成成功"),
 			TEXT("テスト-タイトル"),
-			MB_OK);
+			MB_OK);*/
 	}
 
 	//レンダーステートの設定  αブレンド
@@ -324,16 +323,13 @@ int _stdcall WinMain
 	sprite.SetAngle(0);							//画像の回転
 
 	sprite2.SetAlpha(0.1);						//透明度の設定
-	sprite2.SetSize(screenWidth, screenHeight);//画像の大きさ
+	sprite2.SetSize(256, 128);					//画像の大きさ
 	sprite2.SetAngle(0);						//画像の回転
-
-	sprite3.SetAlpha(0.1);						//透明度の設定
-	sprite3.SetSize(screenWidth / 4, screenHeight / 4);//画像の大きさ
-	sprite3.SetAngle(0);						//画像の回転
+	sprite2.SetPos(screenWidth / 4 * 3, screenHeight / 4 * 2.5);//描画する位置
 
 	//テクスチャのインスタンスを作成
 	textureColor.Load(_T("Texture/tex.png"));	//0[餌] 1[プレイヤー] 2[壁] 3[ミス]
-	textureStart.Load(_T("Texture/Title.png"));	//スタート画像
+	textureStart.Load(_T("Texture/start.png"));	//スタート画像
 	textureOver.Load(_T("Texture/over.bmp"));	//失敗画像
 	textureClear.Load(_T("Texture/clear.png"));	//クリア画像
 
@@ -351,7 +347,7 @@ int _stdcall WinMain
 	//quitメッセージが出てくるまでループを繰り返す
 	//quitメッセージは上記のウィンドウプロシージャから送信
 	//送信の条件などはウィンドウプロシージャを確認
-	while (msg.message != WM_QUIT /*&& pDi->KeyJustPressed(DIK_ESCAPE)*/)
+	while (msg.message != WM_QUIT )
 	{
 
 		//PeekMessage
@@ -419,7 +415,7 @@ int _stdcall WinMain
 					d3d.ClearScreen();
 					Direction = 0, BaitX = 0, BaitY = 0, Count = 0, BaitCount = 0;
 					PlayerX = 1, PlayerY = 1, PlayerXY = 1;
-					PlayerLength = 5;
+					PlayerLength = 1, Speed = 10;
 
 					//壁の部分を初期化
 					for (int y = 0; y < WallLectSize; y++)
@@ -450,7 +446,8 @@ int _stdcall WinMain
 					//エンター押したときPLAYへ
 					if (pDi->KeyJustPressed(DIK_RETURN))
 					{
-						switch (degree)
+						//難易度追加したかった。。。
+						/*switch (degree)
 						{
 							case Easy:
 								Speed = 20;
@@ -464,14 +461,15 @@ int _stdcall WinMain
 								Speed = 5;
 
 								break;
-						}
+						}*/
+						
 						game = PLAY;
 					}
 					break;
 				case PLAY:
 					//とりあえず常時蛇が動くプログラム
 					Count++;
-					while (BaitCount != 1)
+					while (BaitCount != 1 || PlayerLength == WallHeight * WallWidth)
 					{
 						BaitX = rand() % WallWidth;
 						BaitY = rand() % WallHeight;
@@ -557,6 +555,11 @@ int _stdcall WinMain
 						game = OVER;
 						gameFlag = false;
 					}
+					else if (PlayerLength == WallHeight * WallWidth)
+					{
+						game = OVER;
+						gameFlag = true;
+					}
 					else
 					{
 						MapWall[PlayerY][PlayerX] = 0;
@@ -583,8 +586,7 @@ int _stdcall WinMain
 			d3d.ClearScreen();
 
 			//壁の描画----------------------------------------------------------------------------------
-			if (game != START && game != ZERO)
-			{
+			
 				for (int x = 0; x < WallLectSize; x++)//横の壁の描写
 				{
 					//上の壁の描画
@@ -637,33 +639,31 @@ int _stdcall WinMain
 					textureColor.SetNum(0, 0);
 					sprite.Draw(textureColor);
 				}
-			}//ゲームプレイ中のみ表示の終わり
+			
 
 		
 			
 			//ゲームのスタートとオーバー時に表示する画像描画//--------------------------------------------------------------------------------------------
 			
-		if (game == START || game == OVER)
-		{
-			//スプライトの描画
-			if (game == START)
+			if (game == START || game == OVER)
 			{
-				sprite2.SetPos(screenWidth / 2, screenHeight / 2);
-				sprite2.Draw(textureStart);
-			}
-			else if (game == OVER)
-			{
-				sprite3.SetPos(screenWidth / 4 * 3, screenHeight / 4 * 2.5);
-				if (gameFlag == false)
+				//スプライトの描画
+				if (game == START)
 				{
-					sprite3.Draw(textureOver);
+					sprite2.Draw(textureStart);
 				}
-				else
+				else if (game == OVER)
 				{
-					sprite3.Draw(textureClear);
+					if (gameFlag == false)
+					{
+						sprite2.Draw(textureOver);
+					}
+					else
+					{
+						sprite2.Draw(textureClear);
+					}
 				}
 			}
-		}
 
 			//描画終了の合図//--------------------------------------------------------------------------------------------
 
